@@ -52,17 +52,15 @@ public class RandomLoadBalance extends AbstractLoadBalance {
         // the weight of every invokers
         int[] weights = new int[length];
         // the first invoker's weight
-        int firstWeight = getWeight(invokers.get(0), invocation);
-        weights[0] = firstWeight;
         // The sum of weights
-        int totalWeight = firstWeight;
-        for (int i = 1; i < length; i++) {
+        int totalWeight = 0;
+        for (int i = 0; i < length; i++) {
             int weight = getWeight(invokers.get(i), invocation);
-            // save for later use
-            weights[i] = weight;
             // Sum
             totalWeight += weight;
-            if (sameWeight && weight != firstWeight) {
+            // save for later use
+            weights[i] = totalWeight;
+            if (sameWeight && totalWeight != weight * (i + 1)) {
                 sameWeight = false;
             }
         }
@@ -71,8 +69,7 @@ public class RandomLoadBalance extends AbstractLoadBalance {
             int offset = ThreadLocalRandom.current().nextInt(totalWeight);
             // Return a invoker based on the random value.
             for (int i = 0; i < length; i++) {
-                offset -= weights[i];
-                if (offset < 0) {
+                if (offset < weights[i]) {
                     return invokers.get(i);
                 }
             }
